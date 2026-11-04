@@ -257,7 +257,7 @@ const $=id=>document.getElementById(id);
 const f0=x=>Math.round(x).toLocaleString('en-US');
 const dl=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
 function cu(el,to){const from=+el.dataset.v||0;el.dataset.v=to;
- if(from===to||matchMedia('(prefers-reduced-motion:reduce)').matches){el.textContent=f0(to);return}
+ if(from===to){el.textContent=f0(to);return}
  const t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/1400),e=1-Math.pow(1-k,4);el.textContent=f0(from+(to-from)*e);if(k<1&&+el.dataset.v===to)requestAnimationFrame(f)})(t0)}
 const HV={};
 const mk=(k,d,a,u)=>({k,dt:new Date(k+'T00:00:00'),d,a,u,v:d+a+u});
