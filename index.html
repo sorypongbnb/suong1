@@ -350,7 +350,7 @@ const xl=(L,bw,H)=>rows.map((r,i)=>(i%7===0&&n-1-i>=5)||i===n-1?`<text x="${L+i*
 
 $('note').textContent=`Donation = total litres (Diesel + Unleaded 92 + Unleaded 95) × ${RATE} riel. Covers ${n} days of POS data, ${dl(first)} to ${dl(last)} 2026. Rows dated 9 to 16 Oct were left out: they have no daily total and hold placeholder-looking values. US$ figure uses an assumed rate of ${f0(FX)} riel per US$.`;
 
-window._r=1;drawEditor();renderVs();renderCap();renderProfit();if(performance.now()<4000)runNumbers();
+window._r=1;drawEditor();renderVs();renderCap();renderProfit();if(!window._ran){window._ran=1;runNumbers()}
 }
 const FL=['d','a','u'];
 const st=m=>{$('st').textContent=m};
@@ -447,7 +447,7 @@ function renderVs(){
  $('vn').textContent=nt.join(' ')||'Compares total litres, daily average and the donation (litres × 50 ៛).'}
 $('va').addEventListener('change',renderVs);$('vb').addEventListener('change',renderVs);
 /* count-up numbers */
-const MONR='(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*',reAft=new RegExp('^\\s?'+MONR),reBef=new RegExp(MONR+'\\.?\\s?$'),reUnl=/Unleaded\s$/;
+const MONR='(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*',reAft=new RegExp('^\\s?'+MONR),reBef=new RegExp(MONR+'\\.?\\s?$'),reUnl=/(?:Unleaded|Suong)\s$/;
 function numSegs(t){
  const re=/\d[\d,]*(?:\.\d+)?/g,segs=[];let last=0,m,any=false;
  while((m=re.exec(t))){
@@ -457,7 +457,7 @@ function numSegs(t){
  if(!any)return null;segs.push({t:t.slice(last)});return segs}
 function fmtN(g,x){return g.c?x.toLocaleString('en-US',{minimumFractionDigits:g.d,maximumFractionDigits:g.d}):x.toFixed(g.d)}
 function runNumbers(){
- if(!document.createTreeWalker||(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches))return;
+ if(!document.createTreeWalker)return;
  const root=document.querySelector('.wrap');if(!root)return;
  const tok=window._nt=(window._nt||0)+1,items=[],w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;
  while((n=w.nextNode())){const p=n.parentElement;
@@ -468,9 +468,9 @@ function runNumbers(){
  (function f(t){if(tok!==window._nt)return;const k=Math.min(1,Math.max(0,(t-t0)/1500));set(1-Math.pow(1-k,4));if(k<1)requestAnimationFrame(f)})(t0)}
 /* exchange rate */
 let scol=null;
-try{const s=+localStorage.getItem('suo_fx_v1');if(s>0)FX=s}catch(e){}
+FX=4000;
 $('fx').value=FX;
-function saveFx(v){try{if(scol)scol.doc('fx').set({v});else localStorage.setItem('suo_fx_v1',String(v))}catch(e){}}
+function saveFx(v){}
 $('fx').addEventListener('change',()=>{const v=parseFloat($('fx').value);if(!(v>0)){$('fx').value=FX;return}FX=v;render();saveFx(v)});
 function renderProfit(){
  if(!rows.length)return;
@@ -496,17 +496,15 @@ function renderCap(){
  const c3=['Campaign ends',fd(endD),tx];
  $('cs').innerHTML=[['Donated so far','US$'+f0(don/FX),f0(don)+' ៛ from '+f0(lit)+' L'],['Still to reach the cap','US$'+f0(rem/FX),rem?f0(rem)+' ៛, about '+f0(rem/RATE)+' L more fuel':'Nothing left'],c3].map(k=>`<div><span>${k[0]}</span><strong>${k[1]}</strong><em>${k[2]}</em></div>`).join('')
 }
-render();
-const API='/api/data';
+const API='/api/data'
 const load=(u=API)=>fetch(u,{cache:'no-store',credentials:'same-origin'}).then(r=>r.ok?r.json():Promise.reject(r.status));
 function apply(j,edit){
- if(j.fx>0&&j.fx!==FX){FX=j.fx;$('fx').value=FX}
  const ks=Object.keys(j.sales||{}).sort();
  if(ks.length)rows=ks.map(k=>{const v=j.sales[k];return mk(k,+v.d,+v.a,+v.u)});
  if(edit){live=true;if(!$('st').textContent.match(/^(Saved|Added|Replaced|Deleted|Imported)/))st('Logged in. Changes save to data.json and update every chart.')}
  render();return ks.length}
 
-load('/data.json').then(j=>apply(j,false)).catch(()=>{});
+load('/data.json').then(j=>apply(j,false)).catch(()=>render());
 setInterval(()=>{if(!document.hidden)load('/data.json').then(j=>apply(j,false)).catch(()=>{})},120000);
 </script>
 </body>
